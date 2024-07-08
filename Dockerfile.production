@@ -10,7 +10,9 @@ ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry install --no-root
+RUN poetry config virtualenvs.create false
+
+RUN poetry install --no-root --no-interaction --no-ansi
 
 RUN mkdir -p /app /prom /etc/grafana /etc/prometheus
 ENV PROMETHEUS_MULTIPROC_DIR=/prom
