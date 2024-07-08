@@ -1,4 +1,8 @@
 
+import os
+import requests
+import subprocess
+import gdown
 import torch
 import tiktoken
 import torch.nn as nn
@@ -7,8 +11,25 @@ from torch.nn import functional as F
 from train_gpt2 import GPTConfig
 from collections import OrderedDict
 
+def download_file(url, output_directory='weights', output_file_name='model_step8000'):
+
+    # Ensure the output directory exists
+    os.makedirs(output_directory, exist_ok=True)
+
+    # If no output file name is provided, use the name from the URL
+    if output_file_name is None:
+        output_file_name = os.path.basename(url)
+
+    # Construct the full path for the output file
+    output_file = os.path.join(output_directory, output_file_name)
+
+    gdown.download(url, output_file)
+
 
 def load(path_to_weights, device_type):
+    # download weights
+    download_file('https://drive.google.com/uc?export=download&id=1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI')
+
     model = GPT(GPTConfig(vocab_size = 50304))
     assert path_to_weights != None, "You must specify path to your model's weights"
     if device_type == 'cuda' and torch.cuda.is_available():
@@ -68,3 +89,5 @@ if __name__ == "__main__":
 
     model, device = load(args.path, args.device)    
     generated_samples = generate(model, device, args.text, args.num_return_seq, args.max_length)
+
+
