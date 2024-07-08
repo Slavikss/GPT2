@@ -68,6 +68,8 @@ def load(path_to_weights, device_type):
 
 model, device = load(PATH_TO_WEIGHTS, 'cuda')
 
+print(f'using {device}')
+
 @app.route("/predict", methods=['POST'])
 @metrics.gauge("api_in_progress", "requests in progress")
 @metrics.counter("api_invocations_total", "number of invocations")
