@@ -23,6 +23,4 @@ COPY server.py gunicorn.py gpt2.py train_gpt2.py fineweb.py hellaswag.py /app/
 COPY grafana /etc/grafana
 COPY prom/prometheus.yml /etc/prometheus/prometheus.yml
 
-RUN poetry shell
-
 ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]
