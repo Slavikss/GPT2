@@ -18,7 +18,7 @@ from prometheus_client import Counter
 
 app = Flask(__name__, static_url_path="")
 enc = tiktoken.get_encoding('gpt2')
-metrics = GunicornInternalPrometheusMetrics(app)
+# metrics = GunicornInternalPrometheusMetrics(app)
 PATH_TO_WEIGHTS = 'weights/model_step8000'
 PREDICTION_COUNT = Counter("predictions_total", "Number of predictions")
 
