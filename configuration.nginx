@@ -1,12 +1,13 @@
 user root;
 daemon off;
-worker_processes  1;
+# 8 cpus
+worker_processes  8;
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 
 events {
-    worker_connections  10;
+    worker_connections  2048;
 }
 
 http {

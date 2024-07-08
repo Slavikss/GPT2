@@ -1,20 +1,26 @@
 FROM pytorch/pytorch:latest
 
 RUN apt-get update && \
-    apt-get install nginx -y && \
-    pip install supervisor
+    apt-get install -y nginx curl && \
+    pip install supervisor && \
+    curl -sSL https://install.python-poetry.org | python3 -
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+ENV PATH="/root/.local/bin:$PATH"
 
-RUN mkdir /app
 WORKDIR /app
+COPY pyproject.toml poetry.lock ./
 
-RUN mkdir /prom
+RUN poetry install --no-root
+
+RUN mkdir -p /app /prom /etc/grafana /etc/prometheus
 ENV PROMETHEUS_MULTIPROC_DIR=/prom
 
 COPY supervisord.conf /etc/supervisord.conf
-COPY configuration.nginx /etc/configuration.nginx
-COPY server.py gunicorn.py gpt2.py train_gpt2.py fineweb.py hellaswag.py gunicorn.py /app/
+COPY configuration.nginx /etc/nginx/conf.d/default.conf
+COPY server.py gunicorn.py gpt2.py train_gpt2.py fineweb.py hellaswag.py /app/
+COPY grafana /etc/grafana
+COPY prom/prometheus.yml /etc/prometheus/prometheus.yml
+
+RUN poetry shell
 
 ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]
