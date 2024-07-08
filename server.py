@@ -1,6 +1,8 @@
 
 import os
+import time
 import requests
+import json
 import subprocess
 import gdown
 import torch
@@ -10,12 +12,21 @@ from gpt2 import GPT
 from torch.nn import functional as F
 from train_gpt2 import GPTConfig
 from collections import OrderedDict
+from flask import Flask, request, jsonify
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+from prometheus_client import Counter
+
+app = Flask(__name__, static_url_path="")
+enc = tiktoken.get_encoding('gpt2')
+metrics = GunicornInternalPrometheusMetrics(app)
+PATH_TO_WEIGHTS = 'weights/model_step8000'
+PREDICTION_COUNT = Counter("predictions_total", "Number of predictions")
+
 
 def download_file(url, output_directory='weights', output_file_name='model_step8000'):
 
     # Ensure the output directory exists
     os.makedirs(output_directory, exist_ok=True)
-
 
     # If no output file name is provided, use the name from the URL
     if output_file_name is None:
@@ -26,9 +37,8 @@ def download_file(url, output_directory='weights', output_file_name='model_step8
 
     if os.path.exists(output_file):
         print('weights are already cached')
-        return
-
-    gdown.download(url, output_file)
+    else:
+        gdown.download(url, output_file)
 
 
 def load(path_to_weights, device_type):
@@ -57,8 +67,14 @@ def load(path_to_weights, device_type):
 
     return model, device
 
-def generate(model, device, text, num_return_sequences, max_length):
-    enc = tiktoken.get_encoding('gpt2')
+model, device = load(PATH_TO_WEIGHTS, 'cuda')
+
+@app.route("/predict", methods=['POST'])
+@metrics.gauge("api_in_progress", "requests in progress")
+@metrics.counter("api_invocations_total", "number of invocations")
+def generate(model=model, device=device, num_return_sequences=1, max_length=64):
+    t0 = time.time()
+    text = request.get_json(force=True)['message']
     tokens = enc.encode(text)
     tokens = torch.tensor(tokens, dtype=torch.long)
     tokens = tokens.unsqueeze(0).repeat(num_return_sequences, 1)
@@ -78,23 +94,17 @@ def generate(model, device, text, num_return_sequences, max_length):
     for i in range(num_return_sequences):
         tokens = xgen[i, :max_length].tolist()
         decoded_samples.append(enc.decode(tokens))
+    
+    PREDICTION_COUNT.inc()
 
-    return decoded_samples
+    t1 = time.time()
+
+    return jsonify({
+        "output": decoded_samples,
+        'gen_time': f'{round((t1-t0)*1000, 2)} ms'
+    })
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-path", "--path", type=str, default="None", help="path to weights of your own model")
-    parser.add_argument("-text", "--text", type=str, default="None", help="Context to model")
-    parser.add_argument("-num_return_seq", "--num_return_seq", type=int, default= 1, help="How many samples return")
-    parser.add_argument("-max_length", "--max_length", type=int, default=64, help="Length of sample")
-    parser.add_argument("-d", "--device", type=str, default="cuda", help="the device to use")
-    args = parser.parse_args()
-
-    model, device = load(args.path, args.device)    
-    generated_samples = generate(model, device, args.text, args.num_return_seq, args.max_length)
-
-    print(generated_samples)
-
+    app.run(host='0.0.0.0', port=8081)
 
