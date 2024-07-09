@@ -1,5 +1,0 @@
-Flask
-gunicorn
-prometheus-flask-exporter
-gdown
-tiktoken
