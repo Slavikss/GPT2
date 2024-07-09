@@ -2,7 +2,7 @@ FROM pytorch/pytorch:latest
 
 RUN apt-get update && \
     apt-get install -y nginx curl && \
-    pip install supervisor && \
+    pip install supervisor gdown && \
     curl -sSL https://install.python-poetry.org | python3 -
 
 ENV PATH="/root/.local/bin:$PATH"
@@ -14,13 +14,15 @@ RUN poetry config virtualenvs.create false
 
 RUN poetry install --no-root --no-interaction --no-ansi
 
-RUN mkdir -p /app /prom /etc/grafana /etc/prometheus
+# download weights
+RUN mkdir /weights
+RUN gdown https://drive.google.com/file/d/1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI/view?usp=drive_link --fuzzy -O /weights/model_step8000
+
+RUN mkdir -p /app /prom 
 ENV PROMETHEUS_MULTIPROC_DIR=/prom
 
 COPY supervisord.conf /etc/supervisord.conf
-COPY configuration.nginx /etc/nginx/conf.d/default.conf
+COPY configuration.nginx /etc/configuration.nginx
 COPY server.py gunicorn.py gpt2.py train_gpt2.py fineweb.py hellaswag.py /app/
-COPY grafana /etc/grafana
-COPY prom/prometheus.yml /etc/prometheus/prometheus.yml
 
 ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]

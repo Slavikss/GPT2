@@ -19,9 +19,11 @@ from prometheus_client import Counter
 app = Flask(__name__, static_url_path="")
 enc = tiktoken.get_encoding('gpt2')
 metrics = GunicornInternalPrometheusMetrics(app)
+
+# weights in dockerfile download to this dir
 PATH_TO_WEIGHTS = 'weights/model_step8000'
 PREDICTION_COUNT = Counter("predictions_total", "Number of predictions")
-
+    
 
 def download_file(url, output_directory='weights', output_file_name='model_step8000'):
 
@@ -42,8 +44,6 @@ def download_file(url, output_directory='weights', output_file_name='model_step8
 
 
 def load(path_to_weights, device_type):
-    # download weights
-    download_file('https://drive.google.com/uc?export=download&id=1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI')
     model = GPT(GPTConfig(vocab_size = 50304))
     assert path_to_weights != None, "You must specify path to your model's weights"
     if device_type == 'cuda' and torch.cuda.is_available():
