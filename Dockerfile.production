@@ -3,7 +3,8 @@ FROM pytorch/pytorch:latest
 RUN apt-get update && \
     apt-get install -y nginx curl && \
     pip install supervisor gdown && \
-    curl -sSL https://install.python-poetry.org | python3 -
+    curl -sSL https://install.python-poetry.org | python3 - && \
+    apt -y install build-essential
 
 ENV PATH="/root/.local/bin:$PATH"
 

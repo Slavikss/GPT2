@@ -61,6 +61,7 @@ def load(path_to_weights, device_type):
 
     # loading weights
     model.load_state_dict(new_state_dict)
+    model = torch.compile(model)
     model.to(device_type)
     model.eval()
 
