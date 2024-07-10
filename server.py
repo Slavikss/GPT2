@@ -22,6 +22,7 @@ metrics = GunicornInternalPrometheusMetrics(app)
 
 # weights in dockerfile download to this dir
 PATH_TO_WEIGHTS = 'weights/model_step8000'
+DEVICE = 'cuda'
 PREDICTION_COUNT = Counter("predictions_total", "Number of predictions")
     
 
@@ -50,7 +51,7 @@ def load(path_to_weights, device_type):
         device = 'cuda'
     else: 
         device = 'cpu'
-    state_dict = torch.load(path_to_weights)
+    state_dict = torch.load(path_to_weights, map_location=torch.device(device))
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
         if k.startswith("module."):
@@ -67,7 +68,7 @@ def load(path_to_weights, device_type):
 
     return model, device
 
-model, device = load(PATH_TO_WEIGHTS, 'cuda')
+model, device = load(PATH_TO_WEIGHTS, DEVICE)
 
 print(f'using {device}')
 
