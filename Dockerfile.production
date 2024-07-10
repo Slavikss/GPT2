@@ -8,22 +8,21 @@ RUN apt-get update && \
 
 ENV PATH="/root/.local/bin:$PATH"
 
-WORKDIR /app
-COPY pyproject.toml poetry.lock ./
-
-RUN poetry config virtualenvs.create false
-
-RUN poetry install --no-root --no-interaction --no-ansi
-
-# download weights
-RUN mkdir weights
-RUN gdown https://drive.google.com/file/d/1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI/view?usp=drive_link --fuzzy -O /weights/model_step8000
-
 RUN mkdir -p /app /prom 
 ENV PROMETHEUS_MULTIPROC_DIR=/prom
+
+WORKDIR /app
+COPY pyproject.toml poetry.lock ./
 
 COPY supervisord.conf /etc/supervisord.conf
 COPY configuration.nginx /etc/configuration.nginx
 COPY server.py gunicorn.py gpt2.py train_gpt2.py fineweb.py hellaswag.py /app/
+
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-root --no-interaction --no-ansi
+
+# download weights
+RUN mkdir weights
+RUN gdown https://drive.google.com/file/d/1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI/view?usp=drive_link --fuzzy -O weights/model_step8000
 
 ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]
