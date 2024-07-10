@@ -1,6 +1,6 @@
 user root;
 daemon off;
-# change to tour cpu count
+# change to your cpu count
 worker_processes  1;
 
 error_log  /var/log/nginx/error.log warn;
