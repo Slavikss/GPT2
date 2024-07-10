@@ -16,7 +16,7 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --no-root --no-interaction --no-ansi
 
 # download weights
-RUN mkdir /weights
+RUN mkdir weights
 RUN gdown https://drive.google.com/file/d/1DKDPW9x8EyFPa8O_uSw95t8dd3pVtAJI/view?usp=drive_link --fuzzy -O /weights/model_step8000
 
 RUN mkdir -p /app /prom 
