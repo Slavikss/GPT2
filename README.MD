@@ -20,3 +20,6 @@ Model description:
 - Trained on [FineWeb10B](https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu) sample with 2x RTX4090 24GB
 - Gradient accumulation for 0.5M batchsize
 - Optimization: Flash attention, weights initialization, *"beautiful"* numbers - powers of 2, torch.compile(), torch.autocast() etc
+  
+TODO:
+- make ONNX model
